@@ -1,3 +1,0 @@
-PORT=3000
-MOVIESERVER=http://localhost:3001/movies
-TVSERVER=http://localhost:3002/tv
