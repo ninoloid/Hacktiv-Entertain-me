@@ -26,16 +26,18 @@ module.exports = {
         }
       })    
       .then(results => {
-        const movies = results[0].data
-        const tvSeries = results[1].data
-        const result = {
-          movies,
-          tvSeries
+        if (results) {
+          const movies = results[0].data
+          const tvSeries = results[1].data
+          const result = {
+            movies,
+            tvSeries
+          }
+            redis.set('services', JSON.stringify(result))
+            res
+              .status(200)
+              .json(result)
         }
-          redis.set('services', JSON.stringify(result))
-          res
-            .status(200)
-            .json(result)
       })
       .catch(({response}) => {
         res
@@ -59,14 +61,14 @@ module.exports = {
           })
         }
       })
-      .then(({data: movies}) => {
-        const result = {
-          movies
-        }
-          redis.set('movieCache', JSON.stringify(result))
+      .then(response => {
+        if (response) {
+          const movies = response.data
+          redis.set('movieCache', JSON.stringify(movies))
           res
             .status(200)
-            .json(result)
+            .json(movies)
+        }
       })
       .catch(({response}) => {
         res
@@ -90,14 +92,14 @@ module.exports = {
           })
         }
       })
-      .then(({data: series}) => {
-        const result = {
-          series
-        }
-          redis.set('seriesCache', JSON.stringify(result))
+      .then(response => {
+        if (response) {
+          const series = response.data
+          redis.set('seriesCache', JSON.stringify(series))
           res
             .status(200)
-            .json(result)
+            .json(series)
+        }
       })
       .catch(({response}) => {
         res
@@ -156,7 +158,7 @@ module.exports = {
     })
       .then(({data}) => {
         redis.del('services')
-        redis.get('movieCache')
+        redis.del('movieCache')
         res
           .status(200)
           .json(data)
@@ -178,7 +180,7 @@ module.exports = {
     })
       .then(({data}) => {
         redis.del('services')
-        redis.get('seriesCache')
+        redis.del('seriesCache')
         res
           .status(200)
           .json(data)
@@ -189,4 +191,128 @@ module.exports = {
           .json(response.data)
       })
   },
+
+  getOneMovie(req, res) {
+    const { id } = req.params
+    redis.get('movieCache')
+      .then(result => {
+        if (result) {
+          const movies = JSON.parse(result)
+          const movie = movies.filter(item => item._id === id)
+          if (movie.length > 0) {
+            res
+              .status(200)
+              .json(movie[0])
+          } else {
+            res
+              .status(404)
+              .json({
+                errObj: {msg: "Item not found in the database"}
+              })
+          }
+        } else {
+          return axios({
+            method: 'get',
+            url: `${process.env.MOVIESERVER}/${id}`
+          })
+        }
+      })
+      .then(response => {
+        if (response) {
+          const movies = response.data
+          res
+            .status(200)
+            .json(movies)
+        }
+      })
+      .catch(({response}) => {
+        res
+          .status(response.status)
+          .json(response.data)
+      })
+  },
+
+  getOneSeries(req, res) {
+    const { id } = req.params
+    redis.get('seriesCache')
+      .then(result => {
+        if (result) {
+          const allSeries = JSON.parse(result)
+          const series = allSeries.filter(item => item._id === id)
+          if (series.length > 0) {
+            res
+              .status(200)
+              .json(series[0])
+          } else {
+            res
+              .status(404)
+              .json({
+                errObj: {msg: "Item not found in the database"}
+              })
+          }
+        } else {
+          return axios({
+            method: 'get',
+            url: `${process.env.TVSERVER}/${id}`
+          })
+        }
+      })
+      .then(response => {
+        if (response) {
+          const series = response.data
+          res
+            .status(200)
+            .json(series)
+        }
+      })
+      .catch(({response}) => {
+        res
+          .status(response.status)
+          .json(response.data)
+      })
+  },
+
+  editMovie(req, res) {
+    const data = req.body
+    const { id } = req.params
+    axios({
+      method: 'patch',
+      url: `${process.env.MOVIESERVER}/${id}`,
+      data
+    })
+      .then(({data}) => {
+        redis.del('services')
+        redis.del('movieCache')
+        res
+          .status(201)
+          .json(data)
+      })
+      .catch(({response}) => {
+        res
+          .status(response.status)
+          .json(response.data)
+      })
+  },
+
+  editSeries(req, res) {
+    const data = req.body
+    const { id } = req.params
+    axios({
+      method: 'patch',
+      url: `${process.env.TVSERVER}/${id}`,
+      data
+    })
+      .then(({data}) => {
+        redis.del('services')
+        redis.del('seriesCache')
+        res
+          .status(201)
+          .json(data)
+      })
+      .catch(({response}) => {
+        res
+          .status(response.status)
+          .json(response.data)
+      })
+  }
 }

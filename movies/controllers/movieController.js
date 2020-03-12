@@ -21,7 +21,7 @@ module.exports = {
         } else {
           res
             .status(200)
-            .json({movie})
+            .json(movie)
         }  
       })
       .catch(next)

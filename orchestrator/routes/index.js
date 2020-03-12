@@ -1,12 +1,11 @@
-const express = require('express')
-const router = express.Router()
-const controller = require('../controllers')
+const router = require('express').Router()
+const movieRouter = require('./movieRouter')
+const seriesRouter = require('./seriesRouter')
+const { getAllData } = require('../controllers')
 
-router.get('/', controller.getAllData)
-router.get('/movies', controller.getMovies)
-router.post('/movies', controller.addMovies)
-router.get('/series', controller.getSeries)
-router.delete('/movies/:id', controller.deleteMovies)
-router.delete('/series/:id', controller.deleteSeries)
+router.get('/', getAllData)
+
+router.use('/movies', movieRouter)
+router.use('/series', seriesRouter)
 
 module.exports = router

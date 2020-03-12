@@ -44,7 +44,6 @@ module.exports = {
 
   updateSeries(db, id, data) {
     const { title, overview, poster_path, popularity, tags } = data
-    console.log(title, overview)
 
     const payload = {
       title,
