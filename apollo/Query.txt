@@ -1,0 +1,108 @@
+============================================================================================
+
+// GET ALL DATA
+{
+  getMovies {
+    _id
+    title
+    overview
+    poster_path
+    popularity
+    tags
+  }
+  getSeries {
+    _id
+    title
+    overview
+    poster_path
+    popularity
+    tags
+  }
+}
+// END OF GET ALL
+
+============================================================================================
+
+// GET MOVIE BY ID
+query GetMovieById($id: String) {
+  getMovie(id: $id) {
+    _id
+    title
+    overview
+    poster_path
+    popularity
+    tags
+  }
+}
+
+Query Variables : 
+{ 
+  "id": "5e69d1977fc3db3a512a12e5" 
+}
+// END OF GET MOVIE BY ID
+
+============================================================================================
+
+// CREATE MOVIE
+mutation ($movie:CreateMovieInput) {
+  createMovie(movie:$movie){
+    title
+    overview
+    poster_path
+    popularity
+    tags
+  }
+}
+
+Query Variables : 
+{
+  "movie": {
+    "title": "asd23",
+    "overview": "asdasdasd",
+    "poster_path":"google.com",
+    "popularity" : 10,
+    "tags" : "ahmad msa"
+  }
+}
+// END OF CREATE MOVIE
+
+============================================================================================
+
+// UPDATE MOVIE BY ID
+mutation ($movie:UpdateMovieInput) {
+  updateMovie(movie:$movie){
+    found
+    modified
+  }
+}
+
+Query Variables :
+{
+  "movie": {
+    "_id" : "5e6b6461c424b03e97d15ae4",
+    "title": "keupdate lohs",
+    "overview": "keupdate wew",
+    "poster_path":"google.com",
+    "popularity" : 10,
+    "tags" : "ahmad msa"
+  }
+}
+// END OF UPDATE MOVIE
+
+============================================================================================
+
+// DELETE MOVIE BY ID
+mutation ($id: ID) {
+  deleteMovie (id: $id){
+    found
+    deleted
+  }
+}
+
+Query Variables : 
+{ 
+  "id": "5e69d1977fc3db3a512a12e5" 
+}
+// END OF DELETE MOVIE BY ID
+
+============================================================================================

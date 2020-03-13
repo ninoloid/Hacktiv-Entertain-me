@@ -1,5 +1,7 @@
 const { ApolloServer, gql } = require('apollo-server')
 const axios = require('axios')
+const Redis = require("ioredis")
+const redis = new Redis()
 
 const typeDefs = gql`
 
@@ -29,6 +31,16 @@ const typeDefs = gql`
   type SeriesDeleteResult {
     found: Int
     deleted: Int
+  }
+
+  type MovieUpdateResult {
+    found: Int
+    modified: Int
+  }
+
+  type SeriesUpdateResult {
+    found: Int
+    modified: Int
   }
 
   type Query {
@@ -76,16 +88,30 @@ const typeDefs = gql`
   type Mutation {
     createMovie(movie: CreateMovieInput): Movie
     createSeries(series: CreateSeriesInput): Series
-    updateMovie(movie: UpdateMovieInput): Movie
-    updateSeries(series: UpdateSeriesInput): Series
+    updateMovie(movie: UpdateMovieInput): MovieUpdateResult
+    updateSeries(series: UpdateSeriesInput): SeriesUpdateResult
     deleteMovie(id: ID): MovieDeleteResult
     deleteSeries(id: ID): SeriesDeleteResult
   }
 `
 
-const fetchData = async (port, type) => {
-  const { data } = await axios.get(`http://localhost:${port}/${type}`)
-  return data
+const fetchData = (port, type) => {
+  const isExistOnCache = redis.hget('services', type)
+  .then(result => {
+    if (result) return JSON.parse(result)
+    else {
+      return (async () => {
+        const { data } = await axios.get(`http://localhost:${port}/${type}`)
+        return data
+      })()
+    }
+  })
+  .then(data => {
+    redis.hset('services', type, JSON.stringify(data))
+    return data
+  })
+  .catch(console.log)
+  return isExistOnCache
 }
 
 const resolvers = {
@@ -109,40 +135,42 @@ const resolvers = {
 
   Mutation: {
     createMovie: async (_, args) => {
+      redis.del('services')
       const { data } = await axios.post(`http://localhost:3001/movies`, args.movie)
       return data.movie
     },
 
     createSeries: async (_, args) => {
-      console.log(args)
+      redis.del('services')
       const { data } = await axios.post(`http://localhost:3002/tv`, args.series)
       return data.series
     },
 
     updateMovie: async (_, args) => {
+      redis.del('services')
       const { _id } = args.movie
       const { data } = await axios.patch(`http://localhost:3001/movies/${_id}`, args.movie)
-      return data.movie
+      return data
     },
 
     updateSeries: async (_, args) => {
+      redis.del('services')
       const { _id } = args.series
       const { data } = await axios.patch(`http://localhost:3001/movies/${_id}`, args.series)
-      return data.series
+      return data
     },
 
     deleteMovie: async (_, args) => {
+      redis.del('services')
       const { id } = args
       const { data } = await axios.delete(`http://localhost:3001/movies/${id}`)
-      console.log(data)
       return data
     },
 
     deleteSeries: async (_, args) => {
-      console.log(args)
+      redis.del('services')
       const { id } = args
       const { data } = await axios.delete(`http://localhost:3002/tv/${id}`)
-      console.log(data)
       return data
     },
   }
