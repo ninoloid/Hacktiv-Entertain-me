@@ -156,7 +156,7 @@ const resolvers = {
     updateSeries: async (_, args) => {
       redis.del('services')
       const { _id } = args.series
-      const { data } = await axios.patch(`http://localhost:3001/movies/${_id}`, args.series)
+      const { data } = await axios.patch(`http://localhost:3002/tv/${_id}`, args.series)
       return data
     },
 
